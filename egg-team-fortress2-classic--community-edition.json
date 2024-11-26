@@ -1,0 +1,74 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": null
+    },
+    "exported_at": "2024-11-25T19:51:42-05:00",
+    "name": "Team Fortress 2 Classic: Community Edition",
+    "author": "ogmixerrules@gmail.com",
+    "description": "Team Fortress 2 Classic is a free mod of the 2007 game Team Fortress 2, developed by Eminoma and utilizing the Source engine.",
+    "features": [
+        "steam_disk_space"
+    ],
+    "docker_images": {
+        "ghcr.io\/parkervcp\/steamcmd:debian": "ghcr.io\/parkervcp\/steamcmd:debian"
+    },
+    "file_denylist": [],
+    "startup": ".\/srcds_run -game {{SRCDS_GAME}} -console -port {{SERVER_PORT}} +map {{SRCDS_MAP}} +ip 0.0.0.0 -strictportbind -norestart -debug +maxplayers {{MAXPLAYERS}}",
+    "config": {
+        "files": "{}",
+        "startup": "{\r\n    \"done\": \"gameserver Steam ID\"\r\n}",
+        "logs": "{}",
+        "stop": "quit"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!\/bin\/bash\r\n# steamcmd Base Installation Script\r\n#\r\n# Server Files: \/mnt\/server\r\napt update\r\napt install -y zstd unzip\r\n## just in case someone removed the defaults.\r\nif [[ \"${STEAM_USER}\" == \"\" ]] || [[ \"${STEAM_PASS}\" == \"\" ]]; then\r\n    echo -e \"steam user is not set.\\n\"\r\n    echo -e \"Using anonymous user.\\n\"\r\n    STEAM_USER=anonymous\r\n    STEAM_PASS=\"\"\r\n    STEAM_AUTH=\"\"\r\nelse\r\n    echo -e \"user set to ${STEAM_USER}\"\r\nfi\r\n\r\n## download and install steamcmd\r\ncd \/tmp\r\nmkdir -p \/mnt\/server\/steamcmd\r\ncurl -sSL -o steamcmd.tar.gz https:\/\/steamcdn-a.akamaihd.net\/client\/installer\/steamcmd_linux.tar.gz\r\ntar -xzvf steamcmd.tar.gz -C \/mnt\/server\/steamcmd\r\nmkdir -p \/mnt\/server\/steamapps # Fix steamcmd disk write error when this folder is missing\r\ncd \/mnt\/server\/steamcmd\r\n\r\n# SteamCMD fails otherwise for some reason, even running as root.\r\n# This is changed at the end of the install process anyways.\r\nchown -R root:root \/mnt\r\nexport HOME=\/mnt\/server\r\n\r\n## install game using steamcmd\r\n.\/steamcmd.sh +force_install_dir \/mnt\/server +login ${STEAM_USER} ${STEAM_PASS} ${STEAM_AUTH} $( [[ \"${WINDOWS_INSTALL}\" == \"1\" ]] && printf %s '+@sSteamCmdForcePlatformType windows' ) +app_update ${SRCDS_APPID} $( [[ -z ${SRCDS_BETAID} ]] || printf %s \"-beta ${SRCDS_BETAID}\" ) $( [[ -z ${SRCDS_BETAPASS} ]] || printf %s \"-betapassword ${SRCDS_BETAPASS}\" ) ${INSTALL_FLAGS} validate +quit ## other flags may be needed depending on install. looking at you cs 1.6\r\n\r\n## set up 32 bit libraries\r\nmkdir -p \/mnt\/server\/.steam\/sdk32\r\ncp -v linux32\/steamclient.so ..\/.steam\/sdk32\/steamclient.so\r\n\r\n## set up 64 bit libraries\r\nmkdir -p \/mnt\/server\/.steam\/sdk64\r\ncp -v linux64\/steamclient.so ..\/.steam\/sdk64\/steamclient.so\r\n\r\n## download TF2C from website\r\ncd \/mnt\/server\r\nconfirm=$(wget --quiet --save-cookies \/tmp\/cookies.txt --keep-session-cookies --no-check-certificate \"https:\/\/drive.google.com\/uc?export=download&id=${file_id}\" -O- | sed -rn 's\/.*confirm=([0-9A-Za-z_]+).*\/\\1\/p')\r\nwget --load-cookies \/tmp\/cookies.txt \"https:\/\/drive.usercontent.google.com\/download?id=1-Vq0VFZAN_iEiNswpex1zBcGq9f12leX&export=download&authuser=0&confirm=t\" -O \"tf2classic-final.zip\" && rm -rf \/tmp\/cookies.txt\r\nunzip tf2classic-final.zip\r\nrm -r tf2classic-final.zip\r\n\r\n# replace bin with fixed bin\r\n# mv \/mnt\/server\/tf2classic-final\/custom\/tf2c-fixpack\/bin\/ \/mnt\/server\/tf2classic-final\/\r\n## add fixed gameinfo\r\n\r\n\r\n## fix issue \/w symlink\r\ncd \/mnt\/server\/bin\r\nln -s vphysics_srv.so vphysics.so\r\nln -s studiorender_srv.so studiorender.so\r\nln -s soundemittersystem_srv.so soundemittersystem.so\r\nln -s shaderapiempty_srv.so shaderapiempty.so\r\nln -s scenefilecache_srv.so scenefilecache.so\r\nln -s replay_srv.so replay.so\r\nln -s materialsystem_srv.so materialsystem.so\r\n\r\ncd \/mnt\/server\/tf2classic-final\/bin\r\n## fix server as of 2.0.4 crashing on start\r\nrm -rf server_srv.so\r\nln -s server.so server_srv.so\r\n\r\n## install end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\"",
+            "container": "ghcr.io\/parkervcp\/installers:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "Game ID",
+            "description": "The ID corresponding to the game to download and run using SRCDS.",
+            "env_variable": "SRCDS_APPID",
+            "default_value": "244310",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|regex:\/^(244310)$\/",
+            "field_type": "text"
+        },
+        {
+            "name": "Game Name",
+            "description": "The name corresponding to the game to download and run using SRCDS.",
+            "env_variable": "SRCDS_GAME",
+            "default_value": "tf2classic-final",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|regex:\/^(tf2classic-final)$\/",
+            "field_type": "text"
+        },
+        {
+            "name": "Default Map",
+            "description": "The default map to use when starting the server.",
+            "env_variable": "SRCDS_MAP",
+            "default_value": "ctf_2fort",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|regex:\/^(\\w{1,20})$\/",
+            "field_type": "text"
+        },
+        {
+            "name": "Max Players",
+            "description": "The maximum amount of players allowed on the server.",
+            "env_variable": "MAXPLAYERS",
+            "default_value": "24",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        }
+    ]
+}

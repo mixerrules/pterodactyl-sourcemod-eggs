@@ -9,7 +9,7 @@ If you have any questions, comments, concerns, feel free to message me on discor
 
 ### Open Fortress
 Open Fortress is a free, community-developed Team Fortress 2 mod that introduces new gamemodes, characters, weapons, maps and more to the world of TF2.
-- [Open Fortress Egg](egg-open-fortress-updated.json)
+- [Open Fortress Egg](egg-open-fortress.json)
 - **Discord**: [Open Fortress Discord](https://discord.gg/mKjW2ACCrm)
 - **Website**: [Open Fortress](https://openfortress.fun/)
 
@@ -28,7 +28,7 @@ Team Fortress 2 Classic: Community Edition is the final version of Team Fortess 
 ### Pre-Fortress 2
 Pre-Fortress 2 is a TF2 sourcemod that caters to the gameplay of earlier Team Fortress installments while maintaining the aesthetics from TF2's alternative designs from 2006.
 - [Pre-Fortress 2 Egg](egg-pre--fortress2.json)
-- **Discord**: [Pre-Fortress 2 Discord]([https://discord.gg/7JStYpQbwM](https://discord.gg/ra68rM5nuE))
+- **Discord**: [Pre-Fortress 2 Discord](https://discord.gg/ra68rM5nuE)
 - **Website**: [Pre-Fortress 2](https://prefortress.com/)
 
 ## Planned Eggs:

@@ -1,0 +1,82 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": null
+    },
+    "exported_at": "2024-11-27T19:36:38-05:00",
+    "name": "Pre-Fortress 2",
+    "author": "ogmixerrules@gmail.com",
+    "description": "Pre-Fortress 2 is a sourcemod that recreates the aesthetic and gameplay of the 2006 beta version of Team Fortress 2.",
+    "features": null,
+    "docker_images": {
+        "ghcr.io\/pterodactyl\/games:source": "ghcr.io\/pterodactyl\/games:source"
+    },
+    "file_denylist": [],
+    "startup": ".\/srcds_run -game {{SRCDS_GAME}} -console -port {{SERVER_PORT}} +map {{SRCDS_MAP}} +ip 0.0.0.0 -strictportbind -norestart -debug +maxplayers {{MAXPLAYERS}}",
+    "config": {
+        "files": "{}",
+        "startup": "{\r\n    \"done\": \"gameserver Steam ID\"\r\n}",
+        "logs": "{}",
+        "stop": "quit"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!\/bin\/bash\r\n# steamcmd Base Installation Script\r\n#\r\n# Server Files: \/mnt\/server\r\n# Image to install with is 'ubuntu:18.04'\r\ndpkg --add-architecture i386\r\napt -y update\r\napt --no-install-recommends -y install lib32gcc1 libstdc++6 libstdc++6:i386 libncurses5:i386 libtinfo5:i386 libcurl4-gnutls-dev:i386 screen p7zip-full p7zip-rar unzip wget curl ca-certificates\r\n## just in case someone removed the defaults.\r\nif [ \"${STEAM_USER}\" == \"\" ]; then\r\nSTEAM_USER=anonymous\r\nSTEAM_PASS=\"\"\r\nSTEAM_AUTH=\"\"\r\nfi\r\n## download and install steamcmd\r\ncd \/tmp\r\nmkdir -p \/mnt\/server\/steamcmd\r\ncurl -sSL -o steamcmd.tar.gz https:\/\/steamcdn-a.akamaihd.net\/client\/installer\/steamcmd_linux.tar.gz\r\ntar -xzvf steamcmd.tar.gz -C \/mnt\/server\/steamcmd\r\ncd \/mnt\/server\/steamcmd\r\n# SteamCMD fails otherwise for some reason, even running as root.\r\n# This is changed at the end of the install process anyways.\r\nchown -R root:root \/mnt\r\nexport HOME=\/mnt\/server\r\n## install game using steamcmd\r\n.\/steamcmd.sh +login ${STEAM_USER} ${STEAM_PASS} ${STEAM_AUTH} +force_install_dir \/mnt\/server +app_update ${SRCDS_APPID} ${EXTRA_FLAGS} +quit ## other flags may be needed depending on install. looking at you cs 1.6\r\n## set up 32 bit libraries\r\nmkdir -p \/mnt\/server\/.steam\/sdk32\r\ncp -v linux32\/steamclient.so ..\/.steam\/sdk32\/steamclient.so\r\n## set up 64 bit libraries\r\nmkdir -p \/mnt\/server\/.steam\/sdk64\r\ncp -v linux64\/steamclient.so ..\/.steam\/sdk64\/steamclient.so\r\n\r\n## download Pre-Fortress\r\ncd \/mnt\/server\r\nmv bin bin_dontdeleteme\r\nwget https:\/\/archive.prefortress.com\/0.7\/pf2_${GAME_VERSION}.7z\r\nunzip pf2_full_0.7.3.7z\r\nmv bin_dontdeleteme bin\r\n\r\n## fix issue \/w symlink\r\ncd \/mnt\/server\/bin\r\nln -s datacache_srv.so datacache.so\r\nln -s dedicated_srv.so dedicated.so\r\nln -s engine_srv.so engine.so\r\nln -s materialsystem_srv.so materialsystem.so\r\nln -s replay_srv.so replay.so\r\nln -s scenefilecache_srv.so scenefilecache.so\r\nln -s shaderapiempty_srv.so shaderapiempty.so\r\nln -s soundemittersystem_srv.so soundemittersystem.so\r\nln -s studiorender_srv.so studiorender.so\r\nln -s vphysics_srv.so vphysics.so\r\nmv libstdc++.so.6 libstdc++.so.6.old\r\n## more symlink fixes\r\ncd \/mnt\/server\/pf2\/bin\r\nln -s server.so server_srv.so",
+            "container": "ghcr.io\/parkervcp\/installers:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "Game ID",
+            "description": "The ID corresponding to the game to download and run using SRCDS.",
+            "env_variable": "SRCDS_APPID",
+            "default_value": "244310",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|regex:\/^(244310)$\/",
+            "field_type": "text"
+        },
+        {
+            "name": "Game Name",
+            "description": "The name corresponding to the game to download and run using SRCDS.",
+            "env_variable": "SRCDS_GAME",
+            "default_value": "pf2",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|regex:\/^(pf2)$\/",
+            "field_type": "text"
+        },
+        {
+            "name": "Default Map",
+            "description": "The default map to use when starting the server.",
+            "env_variable": "SRCDS_MAP",
+            "default_value": "ad_dustbowl",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|regex:\/^(\\w{1,20})$\/",
+            "field_type": "text"
+        },
+        {
+            "name": "Max Players",
+            "description": "The maximum amount of players allowed on the server.",
+            "env_variable": "MAXPLAYERS",
+            "default_value": "24",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:32",
+            "field_type": "text"
+        },
+        {
+            "name": "PF2 Version",
+            "description": "Pick which version you want to use",
+            "env_variable": "GAME_VERSION",
+            "default_value": "0.7.3",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        }
+    ]
+}

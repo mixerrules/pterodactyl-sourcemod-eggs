@@ -1,6 +1,6 @@
 # Pterodactyl SourceMod Eggs
 
-This repository contains updated and working versions of various Pterodactyl eggs for SourceMods, including **Open Fortress**, **TF2 Classic**, Lamda Fortress, Pre-Fortress 2, & More.
+This repository contains updated and working versions of various Pterodactyl eggs for SourceMods, including **Open Fortress**, **TF2 Classic**, **Lamda Fortress**, **Pre-Fortress 2**, & More.
 
 ### Need Help?
 If you have any questions, comments, concerns, feel free to message me on discord @MIXERRULES or submit an issue! 
@@ -35,10 +35,15 @@ Pre-Fortress 2 is a TF2 sourcemod that caters to the gameplay of earlier Team Fo
 - Lamda Fortress
 - Lamda Fortress: Extended
 - Fortress Connected ("Main" & Dev)
-- Team Fortress 2: Vintage
 - Fortress Obscura
 - Fortress Zombies
+- Beta Fortress
+- Team Fortress: Forgotten
 - ~~Team Deathmatch Classic~~
+- Team Fortress 2 Classic Prime
+- Team Fortress 2: Vintage (3.5 & Nightly)
+- Virutal Fortress 2 (Possibly)
+- Sine Fortress
 
 # Licensing:
 These eggs are all free to use, modify, redistrute and whatever else you may do with them. We are not responsable for them potentially horribly breaking your game servers.

@@ -1,0 +1,72 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": null
+    },
+    "exported_at": "2025-01-08T13:46:37-05:00",
+    "name": "Team Fortress 2 Vintage",
+    "author": "piggalot@gmail.com",
+    "description": "Team Fortress 2 Vintage is a Source 2013 modification based off of Team Fortress 2 Classic as a re-imagining of retail TF2, focusing on being a museum to the game.",
+    "features": null,
+    "docker_images": {
+        "ghcr.io\/parkervcp\/yolks:games_source": "ghcr.io\/parkervcp\/yolks:games_source"
+    },
+    "file_denylist": [],
+    "startup": ".\/srcds_run -game {{SRCDS_GAME}} -console -port {{SERVER_PORT}} +map {{SRCDS_MAP}} +ip 0.0.0.0 -strictportbind -norestart -debug +maxplayers {{MAXPLAYERS}}",
+    "config": {
+        "files": "{}",
+        "startup": "{\r\n    \"done\": \"gameserver Steam ID\"\r\n}",
+        "logs": "{}",
+        "stop": "quit"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!\/bin\/bash\r\n# steamcmd Base Installation Script\r\n#\r\n# Server Files: \/mnt\/server\r\n# Image to install with is 'ghcr.io\/parkervcp\/installers:debian'\r\n\r\n# Beans need some extra packages?\r\ndpkg --add-architecture i386;\r\napt -y update\r\napt -y --no-install-recommends install curl lib32gcc-s1 libc6:i386 ca-certificates 7zip libstdc++6 libstdc++6:i386 libncurses5:i386 libtinfo5:i386 libcurl4-gnutls-dev:i386 libsdl2-2.0-0:i386 file\r\napt -y --no-install-recommends install libstdc++6 libncurses5 libtinfo5 libcurl4-gnutls-dev \r\n\r\n## just in case someone removed the defaults.\r\nif [[ \"${STEAM_USER}\" == \"\" ]] || [[ \"${STEAM_PASS}\" == \"\" ]]; then\r\n    echo -e \"steam user is not set.\\n\"\r\n    echo -e \"Using anonymous user.\\n\"\r\n    STEAM_USER=anonymous\r\n    STEAM_PASS=\"\"\r\n    STEAM_AUTH=\"\"\r\nelse\r\n    echo -e \"user set to ${STEAM_USER}\"\r\nfi\r\n\r\n## download and install steamcmd\r\ncd \/tmp\r\nmkdir -p \/mnt\/server\/steamcmd\r\ncurl -sSL -o steamcmd.tar.gz https:\/\/steamcdn-a.akamaihd.net\/client\/installer\/steamcmd_linux.tar.gz\r\ntar -xzvf steamcmd.tar.gz -C \/mnt\/server\/steamcmd\r\nmkdir -p \/mnt\/server\/steamapps\r\ncd \/mnt\/server\/steamcmd\r\n\r\n# SteamCMD fails otherwise for some reason, even running as root.\r\n# This is changed at the end of the install process anyways.\r\nchown -R root:root \/mnt\r\nexport HOME=\/mnt\/server\r\n\r\n# SDK 2013\r\ncd \/mnt\/server\/steamcmd\r\n.\/steamcmd.sh +force_install_dir \/mnt\/server +login ${STEAM_USER} ${STEAM_PASS} ${STEAM_AUTH} +app_update ${SRCDS_APPID} ${EXTRA_FLAGS} validate +quit \r\n\r\n# TF2DS\r\ncd \/mnt\/server\/steamcmd\r\n.\/steamcmd.sh +force_install_dir \/mnt\/server\/tf2 +login ${STEAM_USER} ${STEAM_PASS} ${STEAM_AUTH} +app_update 232250 ${EXTRA_FLAGS} validate +quit \r\n\r\n## set up 32 bit libraries\r\nmkdir -p \/mnt\/server\/.steam\/sdk32\r\ncp -v linux32\/steamclient.so ..\/.steam\/sdk32\/steamclient.so\r\n\r\n## set up 64 bit libraries\r\nmkdir -p \/mnt\/server\/.steam\/sdk64\r\ncp -v linux64\/steamclient.so ..\/.steam\/sdk64\/steamclient.so\r\n\r\n## download OpenFortress\r\ncd \/mnt\/server\r\nwget https:\/\/nightly.link\/TF2V\/TF2Vintage\/workflows\/release\/3.6\/tf2vintage.zip\r\nunzip tf2vintage.zip\r\n7zz x tf2vintage.7z\r\nrm -rf tf2vintage.zip tf2vintage.7z\r\n\r\n## add fixed gameinfo\r\ncd \/mnt\/server\/tf2vintage\r\nrm -rf gameinfo.txt\r\ncat >> gameinfo.txt << EOF\r\n\"GameInfo\"\r\n{\r\n\tgame\t\t\"Team Fortress 2 Vintage\"\r\n\tgamelogo \t1 \r\n\ttype \t\tmultiplayer_only \r\n\ticon\t\t\"resource\/game\"\t\t\r\n\tdeveloper \t\"Team Fortress 2 Vintage Team\"\r\n\tdeveloper_url \t\"https:\/\/steamcommunity.com\/groups\/TF2_Vintage\"\r\n\tnomodels \t1 \r\n\tnohimodel \t1\t\r\n\tnocrosshair \t0 \r\n\tGameData\t\"tf2v.fgd\"\r\n\thidden_maps \r\n\t{ \r\n\t\t\"test_speakers\"\t\t1 \r\n\t\t\"test_hardware\"\t\t1 \r\n\t\t\"background01\"\t\t1\r\n\t}\r\n\tInstancePath \t\"maps\/instances\/\"\r\n\tadvcrosshair \t1\r\n\tsupportsvr \t1 \t\r\n\r\n\tFileSystem \r\n\t{ \r\n\t\tSteamAppId\t\t243750\t\t\r\n\r\n\t\tSearchPaths \r\n\t\t{ \r\n\t\t\t\/\/ Firstly, mount all user customizations.  This will search for VPKs and subfolders \r\n\t\t\t\/\/ and mount them in alphabetical order.  The easiest way to distribute a mod is to \r\n\t\t\t\/\/ pack up the custom content into a VPK.  To \"install\" a mod, just drop it in this \r\n\t\t\t\/\/ folder. \r\n\t\t\t\/\/ Note that this folder is scanned only when the game is booted.\t\r\n\t\t\tgame+mod\t\t\t|gameinfo_path|custom\/* \r\n\t\t\t\r\n\t\t\t\/\/ Before searching for the rest of the game files, we then search for the censorship\r\n\t\t\t\/\/ patch files of TF2V to remove the blood and gore ingame using a signed VPK.\r\n\t\t\t\/\/game+mod\t\t\t|gameinfo_path|TF2V_low_violence_patch.vpk\r\n\t\t\t\r\n\t\t\t\/\/ Search loose files.  We'll set the directory containing the gameinfo.txt file\r\n\t\t\t\/\/ as the first \"mod\" search path (after any user customizations). This is also the one\r\n\t\t\t\/\/ that's used when writing to the \"mod\" path.\r\n\t\t\tgame+mod+mod_write+default_write_path\t\t|gameinfo_path|.\r\n\t\t\t\r\n\t\t\t\/\/\tSearch the base TF2V folder. This can be then used for taking files not supplied\r\n\t\t\t\/\/\tby expansions.\r\n\t\t\t\/\/game\t\t\t\t|gameinfo_path|..\/tf2vintage\r\n\r\n\t\t\t\/\/ Where the game's binaries are.\r\n\t\t\tgamebin\t\t\t\t|gameinfo_path|bin\t\r\n\t\t\t\r\n\t\t\t\/\/ We search VPK files before ordinary folders, because most files will be found in\r\n\t\t\t\/\/ VPK and we can avoid making thousands of file system calls to attempt to open files\r\n\t\t\t\/\/ in folders where they don't exist.  (Searching a VPK is much faster than making an \r\n\t\t\t\/\/ operating system call.)\r\n\t\t\t\/\/ TF2V will reintroduce its VPK directory files once the project reaches a stable release, so we'll\r\n\t\t\t\/\/ remove them from the VPK calls for now.\r\n\t\t\tgame_lv\t\t\t\thl2\/hl2_lv.vpk\r\n\t\t\t\/\/game+mod+vgui\t\t|gameinfo_path|tf2vintage_misc.vpk\r\n\t\t\t\/\/game+mod\t\t\t|gameinfo_path|tf2vintage_materials.vpk\r\n\t\t\t\/\/game+mod\t\t\t|gameinfo_path|tf2vintage_models.vpk\r\n\t\t\t\/\/game+mod\t\t\t|gameinfo_path|tf2vintage_sound.vpk\r\n\t\t\t\/\/game+mod\t\t\thl2mp\/hl2mp_english.vpk\t\t\t\r\n\t\t\t\/\/game+mod\t\t\thl2mp\/hl2mp_pak.vpk\t\t\t\r\n\t\t\tgame\t\t\t\t|gameinfo_path|hl2\/hl2_english.vpk\t\t\t\r\n\t\t\tgame\t\t\t\t|gameinfo_path|hl2\/hl2_pak.vpk\t\t\t\r\n\t\t\tgame\t\t\t\t|gameinfo_path|hl2\/hl2_textures.vpk\t\t\t\r\n\t\t\tgame\t\t\t\t|gameinfo_path||hl2\/hl2_sound_vo_english.vpk\t\t\t\r\n\t\t\tgame\t\t\t\t|gameinfo_path|hl2\/hl2_sound_misc.vpk\t\t\t\r\n\t\t\tgame\t\t\t\t|gameinfo_path|hl2\/hl2_misc.vpk\t\t\r\n\t\t\tplatform\t\t\t|gameinfo_path|platform\/platform_misc.vpk\r\n\t\t\t\r\n\t\t\t\/\/ Add the HL2 directory as a game search path.  This is also where where writes\t\t\t\r\n\t\t\t\/\/ to the \"game\" path go.\t\t\t\r\n\t\t\t\/\/game+game_write\t\t\thl2mp\t\t\t\r\n\t\t\t\/\/game+mod\t\t\tsourcetest\/sourcetest_pak.vpk\r\n\t\t\t\r\n\t\t\t\/\/ Mount in shared HL2 loose files\t\t\t\r\n\t\t\t\/\/game\t\t\t\t|gameinfo_path|hl2mp\t\t\t\r\n\t\t\tgame\t\t\t\t|gameinfo_path|hl2\t\t\t\r\n\t\t\tplatform\t\t\t|gameinfo_path|platform\t\t\t\r\n\t\t\tgame\t\t\t\t|gameinfo_path|sourcetest\r\n\r\n\t\t\t\/\/ Mount in missing assets from TF2\r\n\t\t\tgame \"\/home\/container\/tf2\/tf\/tf2_misc.vpk\"\r\n\t\t\tgame \"\/home\/container\/tf2\/tf\/tf2_sound_misc.vpk\"\r\n\t\t\tgame \"\/home\/container\/tf2\/tf\/tf2_sound_vo_english.vpk\"\r\n\t\t\tgame \"\/home\/container\/tf2\/tf\/tf2_textures.vpk\"\r\n\t\t\tgame \"\/home\/container\/tf2\/tf\"\r\n\t\t\tgame \"\/home\/container\/tf2\/hl2\/hl2_textures.vpk\"\r\n\t\t\tgame \"\/home\/container\/tf2\/hl2\/hl2_sound_vo_english.vpk\"\r\n\t\t\tgame \"\/home\/container\/tf2\/hl2\/hl2_sound_misc.vpk\"\r\n\r\n\t\t\t\/\/ Random files downloaded from gameservers go into a seperate directory, so\r\n\t\t\t\/\/ that it's easy to keep those files segregated from the official game files\r\n\t\t\t\/\/ or customizations intentially installed by the user.\r\n\t\t\t\/\/\r\n\t\t\t\/\/ This directory is searched LAST.  If you visit a server and download\r\n\t\t\t\/\/ a custom model, etc, we don't want that file to override the default\r\n\t\t\t\/\/ game file indefinitely (after you have left the server).  Servers CAN have\r\n\t\t\t\/\/ custom content that overrides the default game files, it just needs to be\r\n\t\t\t\/\/ packed up in the .bsp file so that it will be mounted as a map search pack.\r\n\t\t\t\/\/ The map search pack is mounted at the top of the search path list,\r\n\t\t\t\/\/ but only while you are connected that server and on that map.\r\n\t\t\tgame+download\t\t\t|gameinfo_path|download\/\r\n\t\t}\t\r\n\t}\t\r\n}\r\n\r\nEOF\r\n## fix issue \/w symlink\r\ncd \/mnt\/server\/bin\r\nln -s datacache_srv.so datacache.so\r\nln -s dedicated_srv.so dedicated.so\r\nln -s engine_srv.so engine.so\r\nln -s materialsystem_srv.so materialsystem.so\r\nln -s replay_srv.so replay.so\r\nln -s scenefilecache_srv.so scenefilecache.so\r\nln -s shaderapiempty_srv.so shaderapiempty.so\r\nln -s soundemittersystem_srv.so soundemittersystem.so\r\nln -s studiorender_srv.so studiorender.so\r\nln -s vphysics_srv.so vphysics.so\r\n## more symlink fixes\r\ncd \/mnt\/server\/tf2vintage\/bin\r\nln -s server.so server_srv.so\r\n## fix issue with libstdc++.so\r\nrm -rf \/mnt\/server\/bin\/libstdc++.so.6\r\n\r\n## install end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\"",
+            "container": "ghcr.io\/parkervcp\/installers:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "Game ID",
+            "description": "The ID corresponding to the game to download and run using SRCDS.",
+            "env_variable": "SRCDS_APPID",
+            "default_value": "244310",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|string|in:244310",
+            "field_type": "text"
+        },
+        {
+            "name": "Game Name",
+            "description": "The name corresponding to the game to download and run using SRCDS.",
+            "env_variable": "SRCDS_GAME",
+            "default_value": "tf2vintage",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|regex:\/^(tf2vintage)$\/",
+            "field_type": "text"
+        },
+        {
+            "name": "Default Map",
+            "description": "The default map to use when starting the server.",
+            "env_variable": "SRCDS_MAP",
+            "default_value": "ctf_2fort",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "Max Players",
+            "description": "The maximum amount of players allowed on the server.",
+            "env_variable": "MAXPLAYERS",
+            "default_value": "24",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:32",
+            "field_type": "text"
+        }
+    ]
+}

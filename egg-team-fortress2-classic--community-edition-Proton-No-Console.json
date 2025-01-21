@@ -1,0 +1,84 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": null
+    },
+    "exported_at": "2025-01-20T20:16:35-05:00",
+    "name": "Team Fortress 2 Classic: Community Edition (Proton - No Console)",
+    "author": "ogmixerrules@gmail.com",
+    "description": "Team Fortress 2 Classic is a free mod of the 2007 game Team Fortress 2, developed by Eminoma and utilizing the Source engine.",
+    "features": [
+        "steam_disk_space"
+    ],
+    "docker_images": {
+        "ghcr.io\/parkervcp\/yolks:wine_latest": "ghcr.io\/parkervcp\/yolks:wine_latest"
+    },
+    "file_denylist": [],
+    "startup": "wine srcds.exe -game {{SRCDS_GAME}} -console -port {{SERVER_PORT}} +map {{SRCDS_MAP}} +ip 0.0.0.0 -strictportbind -norestart -debug +maxplayers {{MAXPLAYERS}}",
+    "config": {
+        "files": "{}",
+        "startup": "{\r\n    \"done\": \"gameserver Steam ID\"\r\n}",
+        "logs": "{}",
+        "stop": "quit"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!\/bin\/bash\r\n# steamcmd Base Installation Script\r\n#\r\n# Server Files: \/mnt\/server\r\ndpkg --add-architecture i386\r\napt update\r\napt install -y lib32z1 libncurses5:i386 libbz2-1.0:i386 lib32gcc-s1 lib32stdc++6 libtinfo5:i386 libcurl3-gnutls:i386 libsdl2-2.0-0:i386 libvulkan1\r\napt install -y zstd unzip\r\napt install -y libfreetype6:i386 libfreetype6 libfreetype6-dev make makepp gcc\r\n\r\n# Download the latest FreeType library\r\nwget https:\/\/download.savannah.gnu.org\/releases\/freetype\/freetype-2.11.1.tar.gz -O freetype.tar.gz\r\n\r\n# Extract the downloaded file\r\ntar -xvzf freetype.tar.gz\r\n\r\n# Navigate to the extracted directory\r\ncd freetype-2.11.1\r\n\r\n# Configure the installation with default options\r\n.\/configure\r\n\r\n# Compile and install\r\nMAKE=make .\/configure\r\nmake\r\nmake install\r\n\r\n# Clean up\r\ncd ..\r\nrm -rf freetype-2.11.1 freetype.tar.gz\r\n\r\necho \"FreeType library installed successfully without any interaction!\"\r\n\r\n\r\n## just in case someone removed the defaults.\r\nif [[ \"${STEAM_USER}\" == \"\" ]] || [[ \"${STEAM_PASS}\" == \"\" ]]; then\r\n    echo -e \"steam user is not set.\\n\"\r\n    echo -e \"Using anonymous user.\\n\"\r\n    STEAM_USER=anonymous\r\n    STEAM_PASS=\"\"\r\n    STEAM_AUTH=\"\"\r\nelse\r\n    echo -e \"user set to ${STEAM_USER}\"\r\nfi\r\n\r\n## download and install steamcmd\r\ncd \/tmp\r\nmkdir -p \/mnt\/server\/steamcmd\r\ncurl -sSL -o steamcmd.tar.gz https:\/\/steamcdn-a.akamaihd.net\/client\/installer\/steamcmd_linux.tar.gz\r\ntar -xzvf steamcmd.tar.gz -C \/mnt\/server\/steamcmd\r\nmkdir -p \/mnt\/server\/steamapps # Fix steamcmd disk write error when this folder is missing\r\ncd \/mnt\/server\/steamcmd\r\n\r\n# SteamCMD fails otherwise for some reason, even running as root.\r\n# This is changed at the end of the install process anyways.\r\nchown -R root:root \/mnt\r\nexport HOME=\/mnt\/server\r\n\r\n## install game using steamcmd\r\n# SDK 2013 DS\r\ncd \/mnt\/server\/steamcmd\r\n.\/steamcmd.sh +force_install_dir \/mnt\/server +login ${STEAM_USER} ${STEAM_PASS} ${STEAM_AUTH} +@sSteamCmdForcePlatformType windows +app_update 244310 ${INSTALL_FLAGS} validate +quit\r\n\r\n# TF2 DS\r\n# .\/steamcmd.sh +force_install_dir \/mnt\/server\/tf2 +login ${STEAM_USER} ${STEAM_PASS} ${STEAM_AUTH} +@sSteamCmdForcePlatformType windows +app_update 232250 ${EXTRA_FLAGS} validate +quit \r\n\r\n## set up 32 bit libraries\r\n## mkdir -p \/mnt\/server\/.steam\/sdk32\r\n## cp -v linux32\/steamclient.so ..\/.steam\/sdk32\/steamclient.so\r\n\r\n## set up 64 bit libraries\r\n## mkdir -p \/mnt\/server\/.steam\/sdk64\r\n## cp -v linux64\/steamclient.so ..\/.steam\/sdk64\/steamclient.so\r\n\r\n## download TF2C from website\r\ncd \/mnt\/server\r\nwget \"https:\/\/archive.tf2sm.info\/teamfortress2classiccommunityedition\/TF2CCE%20V5.0%20Pre-compiled.zip\" -O \"tf2classic-final.zip\"\r\nunzip tf2classic-final.zip\r\nrm -r tf2classic-final.zip\r\n\r\n## fix issue \/w symlink\r\n##cd \/mnt\/server\/bin\r\n##ln -s vphysics_srv.so vphysics.so\r\n##ln -s studiorender_srv.so studiorender.so\r\n##ln -s soundemittersystem_srv.so soundemittersystem.so\r\n##ln -s shaderapiempty_srv.so shaderapiempty.so\r\n##ln -s scenefilecache_srv.so scenefilecache.so\r\n##ln -s replay_srv.so replay.so\r\n##ln -s materialsystem_srv.so materialsystem.so\r\n\r\n##cd \/mnt\/server\/tf2classic-final\/bin\r\n## fix server as of 2.0.4 crashing on start\r\n##rm -rf server_srv.so\r\n##ln -s server.so server_srv.so\r\n\r\n\r\ncat << 'EOF' > start.sh\r\n#!\/bin\/bash\r\n\r\n# Check if at least one argument is passed\r\nif [ $# -eq 0 ]; then\r\n    echo \"Usage: $0 <arguments>\"\r\n    exit 1\r\nfi\r\n\r\n# Create the start.bat file with the provided arguments\r\necho \"start srcds.exe $@\" > start.bat\r\nchmod +x start.bat\r\nproton cmd \/c start.bat\r\nEOF\r\n\r\nchmod +x start.sh\r\n\r\n## install end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\"",
+            "container": "ghcr.io\/parkervcp\/installers:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "Game ID",
+            "description": "The ID corresponding to the game to download and run using SRCDS.",
+            "env_variable": "SRCDS_APPID",
+            "default_value": "244310",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|regex:\/^(244310)$\/",
+            "field_type": "text"
+        },
+        {
+            "name": "Game Name",
+            "description": "The name corresponding to the game to download and run using SRCDS.",
+            "env_variable": "SRCDS_GAME",
+            "default_value": "tf2classic-final",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|regex:\/^(tf2classic-final)$\/",
+            "field_type": "text"
+        },
+        {
+            "name": "Default Map",
+            "description": "The default map to use when starting the server.",
+            "env_variable": "SRCDS_MAP",
+            "default_value": "ctf_2fort",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|regex:\/^(\\w{1,20})$\/",
+            "field_type": "text"
+        },
+        {
+            "name": "Max Players",
+            "description": "The maximum amount of players allowed on the server.",
+            "env_variable": "MAXPLAYERS",
+            "default_value": "24",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "Windows Mode",
+            "description": "",
+            "env_variable": "WINDOWS_INSTALL",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        }
+    ]
+}

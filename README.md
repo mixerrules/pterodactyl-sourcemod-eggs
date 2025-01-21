@@ -21,9 +21,10 @@ Team Fortress 2 Classic is a re-imagining of the 2008 era of the original Team F
 
 ### Team Fortress 2 Classic: Community Edition (Pre-Split)
 Team Fortress 2 Classic: Community Edition is the final version of Team Fortess 2 Classic before they decided to split their deathmatch mode into its own game Team Deathmatch Classic.
-- [Team Fortress 2 Classic: Community Edition Egg](egg-team-fortress2-classic--community-edition.jso)
+- [Team Fortress 2 Classic: Community Edition Egg (Non-Proton - NOT WORKING)](egg-team-fortress2-classic--community-edition.json)
+- [Team Fortress 2 Classic: Community Edition Egg (Proton - Works)](egg-team-fortress2-classic--community-edition-Proton-No-Console.json)
 - **Discord**: [Team Fortress 2 Classic Community Edition Discord](https://discord.gg/7JStYpQbwM)
-- **Website**: N/A
+- **Website**: https://hdmineface.github.io/
 
 ### Pre-Fortress 2
 Pre-Fortress 2 is a TF2 sourcemod that caters to the gameplay of earlier Team Fortress installments while maintaining the aesthetics from TF2's alternative designs from 2006.
@@ -41,7 +42,7 @@ Pre-Fortress 2 is a TF2 sourcemod that caters to the gameplay of earlier Team Fo
 - Team Fortress: Forgotten
 - ~~Team Deathmatch Classic~~
 - Team Fortress 2 Classic Prime
-- Team Fortress 2: Vintage (3.5 & Nightly)
+- Team Fortress 2: Vintage (~~3.5~~ & Nightly)
 - Virutal Fortress 2 (Possibly)
 - Sine Fortress
 
